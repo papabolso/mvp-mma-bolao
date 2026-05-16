@@ -327,8 +327,10 @@ def load_resultados() -> pd.DataFrame:
 
 @st.cache_data(ttl=30)
 def load_config() -> dict:
-    res = sb.table("config").select("*").eq("id", 1).single().execute()
-    return res.data or {}
+    res = sb.table("config").select("*").eq("id", 1).execute()
+    if res.data and len(res.data) > 0:
+        return res.data[0]
+    return {}
 
 def invalidate_cache():
     load_lutas.clear()
@@ -504,9 +506,9 @@ with tab_votar:
         lista_lutas_fmt = []
 
         tag_map = {
-            "F1": ("main", "MAIN EVENT"),
-            "F2": ("co-main", "CO-MAIN"),
-            "PRINCIPAL": ("", "MAIN CARD"),
+            "F1": ("main", "SPECIAL CARD"),
+            "F2": ("co-main", "SPECIAL CARD"),
+            "PRINCIPAL": ("", "SPECIAL CARD"),
             "PRELIM": ("prelim", "PRELIM"),
         }
 
@@ -708,7 +710,7 @@ with tab_admin:
             if venc_atual not in opcoes: venc_atual = "Selecione"
             idx = opcoes.index(venc_atual)
 
-            label = {"F1":"MAIN","F2":"CO-MAIN","PRINCIPAL":"PRINCIPAL"}.get(tipo,"PRELIM")
+            label = {"F1":"SPECIAL","F2":"SPECIAL","PRINCIPAL":"SPECIAL"}.get(tipo,"PRELIM")
             st.markdown(f"**[{label}]** {l1} vs {l2}")
             c1, c2 = st.columns([3,1])
             with c1:
