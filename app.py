@@ -1,5 +1,5 @@
 """
-MVP MMA 1 — Bolão Friendly · Edição Especial Netflix
+Money Moicano MMA — Bolão Friendly
 Streamlit + Supabase
 """
 import pandas as pd
@@ -12,29 +12,31 @@ from supabase import create_client, Client
 # PAGE CONFIG
 # ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="MVP MMA 1 · Bolão Netflix",
-    page_icon="🥊",
+    page_title="Money Moicano MMA · Bolão",
+    page_icon="🐓",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 # ──────────────────────────────────────────────
-# CSS — Netflix theme (preto profundo + vermelho icônico)
+# CSS — Money Moicano theme (vermelho + roxo + dourado)
 # ──────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;700&family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;700&family=Anton&family=Inter:wght@400;600&display=swap');
 
 :root{
-  --netflix-red:#E50914;
-  --netflix-red-dark:#831010;
-  --bg:#000000;
-  --surface:#141414;
-  --surface-2:#1f1f1f;
-  --border:#2a2a2a;
+  --mm-red:#D62828;
+  --mm-red-dark:#7a1010;
+  --mm-purple:#6b2d8c;
+  --mm-purple-dark:#3d1a52;
+  --mm-gold:#f5c518;
+  --bg:#0a0606;
+  --surface:#1a0f0f;
+  --surface-2:#241414;
+  --border:#3a1f1f;
   --text:#ffffff;
-  --muted:#808080;
-  --gold:#f5c518;
+  --muted:#9a8888;
 }
 
 html,body,[data-testid="stAppViewContainer"]{
@@ -44,45 +46,56 @@ html,body,[data-testid="stAppViewContainer"]{
 }
 #MainMenu,footer,header{visibility:hidden}
 
-/* HERO — fake Netflix billboard */
+/* HERO — Money Moicano billboard */
 .nfx-hero{
   position:relative;
   text-align:center;
   padding:2.5rem 1rem 1.8rem;
   background:
-    radial-gradient(ellipse at top, rgba(229,9,20,.25) 0%, transparent 60%),
-    linear-gradient(180deg, #000 0%, #0a0a0a 100%);
-  border-bottom:1px solid var(--border);
+    radial-gradient(ellipse at top left, rgba(214,40,40,.3) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(107,45,140,.25) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0606 0%, #150a0a 100%);
+  border-bottom:2px solid var(--mm-red);
   margin:-1rem -1rem 1rem;
   overflow:hidden;
 }
 .nfx-hero::before{
-  content:"N";
+  content:"$";
   position:absolute;
-  top:-40px; right:-20px;
-  font-family:'Bebas Neue',sans-serif;
-  font-size:18rem;
-  color:var(--netflix-red);
-  opacity:.06;
+  top:-50px; right:-20px;
+  font-family:'Anton',sans-serif;
+  font-size:20rem;
+  color:var(--mm-red);
+  opacity:.08;
   line-height:1;
+  pointer-events:none;
+  transform:rotate(-8deg);
+}
+.nfx-hero::after{
+  content:"🐓";
+  position:absolute;
+  bottom:-20px; left:-10px;
+  font-size:8rem;
+  opacity:.08;
   pointer-events:none;
 }
 .nfx-brand{
   font-family:'Bebas Neue',sans-serif;
   font-size:.9rem;
   letter-spacing:.4em;
-  color:var(--netflix-red);
+  color:var(--mm-red);
   margin:0;
   text-transform:uppercase;
 }
 .nfx-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(2.6rem, 9vw, 4.5rem);
-  letter-spacing:.04em;
+  font-family:'Anton',sans-serif;
+  font-size:clamp(2.8rem, 10vw, 5rem);
+  letter-spacing:.02em;
   color:#fff;
   margin:.3rem 0 0;
-  line-height:1;
-  text-shadow:0 4px 30px rgba(229,9,20,.4);
+  line-height:.95;
+  text-shadow:0 4px 30px rgba(214,40,40,.5), 0 0 60px rgba(107,45,140,.3);
+  text-transform:uppercase;
 }
 .nfx-subtitle{
   font-family:'Oswald',sans-serif;
@@ -98,7 +111,7 @@ html,body,[data-testid="stAppViewContainer"]{
   font-size:.75rem;
   letter-spacing:.2em;
   padding:4px 14px;
-  background:var(--netflix-red);
+  background:var(--mm-red);
   color:#fff;
   margin-top:.8rem;
   text-transform:uppercase;
@@ -126,7 +139,7 @@ html,body,[data-testid="stAppViewContainer"]{
 [data-testid="stTabs"] button[role="tab"]:hover{color:#fff}
 [data-testid="stTabs"] button[role="tab"][aria-selected="true"]{
   color:#fff;
-  border-bottom-color:var(--netflix-red);
+  border-bottom-color:var(--mm-red);
   background:transparent;
 }
 
@@ -134,7 +147,7 @@ html,body,[data-testid="stAppViewContainer"]{
 .fight-card{
   background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
   border:1px solid var(--border);
-  border-left:4px solid var(--netflix-red);
+  border-left:4px solid var(--mm-red);
   border-radius:6px;
   padding:1rem 1.2rem;
   margin-bottom:.8rem;
@@ -142,9 +155,14 @@ html,body,[data-testid="stAppViewContainer"]{
   overflow:hidden;
   transition:transform .15s, border-color .15s;
 }
-.fight-card:hover{transform:translateX(2px); border-left-color:#fff}
-.fight-card.main{border-left-color:var(--gold)}
-.fight-card.co-main{border-left-color:#fff}
+.fight-card:hover{transform:translateX(2px); border-left-color:var(--mm-gold)}
+/* Lutas RINHA (F1) — destaque roxo */
+.fight-card.main{
+  border-left-color:var(--mm-purple);
+  background:linear-gradient(135deg, #1a0a26 0%, #241433 100%);
+  border-color:#4a2563;
+}
+.fight-card.co-main{border-left-color:var(--mm-purple)}
 
 .fight-tag{
   display:inline-block;
@@ -153,23 +171,25 @@ html,body,[data-testid="stAppViewContainer"]{
   font-weight:700;
   letter-spacing:.2em;
   padding:3px 10px;
-  background:var(--netflix-red);
+  background:var(--mm-red);
   color:#fff;
   margin-bottom:.6rem;
   text-transform:uppercase;
 }
-.fight-tag.main{background:var(--gold); color:#000}
-.fight-tag.co-main{background:#fff; color:#000}
+.fight-tag.main{background:var(--mm-purple); color:#fff}
+.fight-tag.co-main{background:var(--mm-purple); color:#fff}
 .fight-tag.prelim{background:transparent; color:var(--muted); border:1px solid var(--border)}
 
 .fight-vs{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:1.4rem;
-  letter-spacing:.04em;
+  font-family:'Anton',sans-serif;
+  font-size:1.5rem;
+  letter-spacing:.02em;
   color:#fff;
   line-height:1.2;
+  text-transform:uppercase;
 }
-.fight-vs .vs{color:var(--netflix-red); margin:0 .4em; font-size:.9em}
+.fight-vs .vs{color:var(--mm-red); margin:0 .4em; font-size:.9em}
+.fight-card.main .fight-vs .vs{color:var(--mm-gold)}
 
 /* RANKING */
 .rank-table{width:100%; border-collapse:collapse}
@@ -189,7 +209,7 @@ html,body,[data-testid="stAppViewContainer"]{
   font-family:'Inter',sans-serif;
 }
 .rank-table tr:last-child td{border-bottom:none}
-.rank-table tr.top-1 td{color:var(--gold); font-weight:600}
+.rank-table tr.top-1 td{color:var(--mm-gold); font-weight:600}
 .rank-table tr.top-2 td{color:#c0c0c0; font-weight:600}
 .rank-table tr.top-3 td{color:#cd7f32; font-weight:600}
 .rank-table tr:hover td{background:rgba(229,9,20,.05)}
@@ -207,7 +227,7 @@ div[data-testid="stSelectbox"] select,
 
 /* BOTÕES — estilo Netflix */
 div[data-testid="stButton"]>button{
-  background:var(--netflix-red)!important;
+  background:var(--mm-red)!important;
   color:#fff!important;
   border:none!important;
   border-radius:4px!important;
@@ -235,7 +255,7 @@ div[data-testid="stRadio"] label{
   padding:.5rem 1rem;
   transition:all .2s;
 }
-div[data-testid="stRadio"] label:hover{border-color:var(--netflix-red)}
+div[data-testid="stRadio"] label:hover{border-color:var(--mm-red)}
 
 hr{border-color:var(--border)!important; margin:1.5rem 0!important}
 
@@ -246,14 +266,14 @@ hr{border-color:var(--border)!important; margin:1.5rem 0!important}
   color:#fff;
   margin:1.5rem 0 .8rem;
   padding-bottom:.4rem;
-  border-bottom:2px solid var(--netflix-red);
+  border-bottom:2px solid var(--mm-red);
   display:inline-block;
 }
 .admin-section{
   font-family:'Bebas Neue',sans-serif;
   font-size:1.3rem;
   letter-spacing:.1em;
-  color:var(--netflix-red);
+  color:var(--mm-red);
   margin:1.5rem 0 .5rem;
   padding-bottom:.3rem;
   border-bottom:1px solid var(--border);
@@ -278,14 +298,14 @@ hr{border-color:var(--border)!important; margin:1.5rem 0!important}
 # ──────────────────────────────────────────────
 st.markdown("""
 <div class="nfx-hero">
-  <p class="nfx-brand">N · Original Event</p>
-  <h1 class="nfx-title">MVP MMA <span style="color:var(--netflix-red)">1</span></h1>
-  <p class="nfx-subtitle">Rousey vs Carano · Bolão Friendly</p>
-  <span class="nfx-badge">Edição Especial · Streaming Live</span>
+  <p class="nfx-brand">🐓 Renato Moicano UFC · Apresenta</p>
+  <h1 class="nfx-title">Money <span style="color:var(--mm-red)">Moicano</span> MMA</h1>
+  <p class="nfx-subtitle">Bolão Friendly · Farias vs Capoeira</p>
+  <span class="nfx-badge">Rinha de Inscritos · Lutas Deliciosamente Amadoras</span>
 </div>
 <div class="event-info">
-  <div class="venue">Intuit Dome · Inglewood, CA</div>
-  <div class="date">16 · 05 · 2026</div>
+  <div class="venue">Edição Especial · Money Moicano</div>
+  <div class="date">23 · 05 · 18h</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -506,10 +526,10 @@ with tab_votar:
         lista_lutas_fmt = []
 
         tag_map = {
-            "F1": ("main", "SPECIAL CARD"),
-            "F2": ("co-main", "SPECIAL CARD"),
-            "PRINCIPAL": ("", "SPECIAL CARD"),
-            "PRELIM": ("prelim", "PRELIM"),
+            "F1": ("main", "🐓 RINHA DE INSCRITOS"),
+            "F2": ("co-main", "🐓 RINHA DE INSCRITOS"),
+            "PRINCIPAL": ("", "CARD OFICIAL"),
+            "PRELIM": ("prelim", "CARD OFICIAL"),
         }
 
         for _, luta in lutas.iterrows():
@@ -710,7 +730,7 @@ with tab_admin:
             if venc_atual not in opcoes: venc_atual = "Selecione"
             idx = opcoes.index(venc_atual)
 
-            label = {"F1":"SPECIAL","F2":"SPECIAL","PRINCIPAL":"SPECIAL"}.get(tipo,"PRELIM")
+            label = {"F1":"RINHA","F2":"RINHA","PRINCIPAL":"OFICIAL"}.get(tipo,"OFICIAL")
             st.markdown(f"**[{label}]** {l1} vs {l2}")
             c1, c2 = st.columns([3,1])
             with c1:
