@@ -1,5 +1,5 @@
 """
-Money Moicano MMA — Bolão Friendly
+Fight Music Show 8 — Bolão Friendly
 Streamlit + Supabase
 """
 import pandas as pd
@@ -12,31 +12,31 @@ from supabase import create_client, Client
 # PAGE CONFIG
 # ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="Money Moicano MMA · Bolão",
-    page_icon="🐓",
+    page_title="FMS 8 · Bolão Friendly",
+    page_icon="🥊",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 # ──────────────────────────────────────────────
-# CSS — Money Moicano theme (vermelho + roxo + dourado)
+# CSS — FMS theme (preto + laranja/dourado)
 # ──────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;700&family=Anton&family=Inter:wght@400;600&display=swap');
 
 :root{
-  --mm-red:#D62828;
-  --mm-red-dark:#7a1010;
-  --mm-purple:#6b2d8c;
-  --mm-purple-dark:#3d1a52;
-  --mm-gold:#f5c518;
-  --bg:#0a0606;
-  --surface:#1a0f0f;
-  --surface-2:#241414;
-  --border:#3a1f1f;
+  --mm-red:#FF6A00;
+  --mm-red-dark:#cc4500;
+  --mm-purple:#FFB800;
+  --mm-purple-dark:#cc8800;
+  --mm-gold:#FFD700;
+  --bg:#000000;
+  --surface:#0e0e0e;
+  --surface-2:#181818;
+  --border:#2a2a2a;
   --text:#ffffff;
-  --muted:#9a8888;
+  --muted:#888888;
 }
 
 html,body,[data-testid="stAppViewContainer"]{
@@ -46,36 +46,39 @@ html,body,[data-testid="stAppViewContainer"]{
 }
 #MainMenu,footer,header{visibility:hidden}
 
-/* HERO — Money Moicano billboard */
+/* HERO — FMS billboard */
 .nfx-hero{
   position:relative;
   text-align:center;
   padding:2.5rem 1rem 1.8rem;
   background:
-    radial-gradient(ellipse at top left, rgba(214,40,40,.3) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(107,45,140,.25) 0%, transparent 50%),
-    linear-gradient(180deg, #0a0606 0%, #150a0a 100%);
+    radial-gradient(ellipse at top, rgba(255,106,0,.35) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(255,184,0,.15) 0%, transparent 60%),
+    linear-gradient(180deg, #000 0%, #0a0a0a 100%);
   border-bottom:2px solid var(--mm-red);
   margin:-1rem -1rem 1rem;
   overflow:hidden;
 }
 .nfx-hero::before{
-  content:"$";
+  content:"FMS";
   position:absolute;
-  top:-50px; right:-20px;
+  top:10px; right:-20px;
   font-family:'Anton',sans-serif;
-  font-size:20rem;
-  color:var(--mm-red);
-  opacity:.08;
+  font-size:11rem;
+  background:linear-gradient(135deg, var(--mm-red), var(--mm-gold));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  opacity:.10;
   line-height:1;
   pointer-events:none;
-  transform:rotate(-8deg);
+  letter-spacing:-.05em;
 }
 .nfx-hero::after{
-  content:"🐓";
+  content:"🥊";
   position:absolute;
-  bottom:-20px; left:-10px;
-  font-size:8rem;
+  bottom:-15px; left:-10px;
+  font-size:7rem;
   opacity:.08;
   pointer-events:none;
 }
@@ -91,10 +94,13 @@ html,body,[data-testid="stAppViewContainer"]{
   font-family:'Anton',sans-serif;
   font-size:clamp(2.8rem, 10vw, 5rem);
   letter-spacing:.02em;
-  color:#fff;
+  background:linear-gradient(135deg, #fff 0%, var(--mm-gold) 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
   margin:.3rem 0 0;
   line-height:.95;
-  text-shadow:0 4px 30px rgba(214,40,40,.5), 0 0 60px rgba(107,45,140,.3);
+  text-shadow:0 4px 30px rgba(255,106,0,.4);
   text-transform:uppercase;
 }
 .nfx-subtitle{
@@ -156,13 +162,14 @@ html,body,[data-testid="stAppViewContainer"]{
   transition:transform .15s, border-color .15s;
 }
 .fight-card:hover{transform:translateX(2px); border-left-color:var(--mm-gold)}
-/* Lutas RINHA (F1) — destaque roxo */
+/* Lutas MAIN (F1) — destaque dourado */
 .fight-card.main{
-  border-left-color:var(--mm-purple);
-  background:linear-gradient(135deg, #1a0a26 0%, #241433 100%);
-  border-color:#4a2563;
+  border-left-color:var(--mm-gold);
+  background:linear-gradient(135deg, #1a1206 0%, #251a08 100%);
+  border-color:#5a3a0e;
+  box-shadow:0 0 20px rgba(255,215,0,.1);
 }
-.fight-card.co-main{border-left-color:var(--mm-purple)}
+.fight-card.co-main{border-left-color:var(--mm-red)}
 
 .fight-tag{
   display:inline-block;
@@ -176,8 +183,8 @@ html,body,[data-testid="stAppViewContainer"]{
   margin-bottom:.6rem;
   text-transform:uppercase;
 }
-.fight-tag.main{background:var(--mm-purple); color:#fff}
-.fight-tag.co-main{background:var(--mm-purple); color:#fff}
+.fight-tag.main{background:var(--mm-gold); color:#000}
+.fight-tag.co-main{background:var(--mm-red); color:#fff}
 .fight-tag.prelim{background:transparent; color:var(--muted); border:1px solid var(--border)}
 
 .fight-vs{
@@ -298,14 +305,14 @@ hr{border-color:var(--border)!important; margin:1.5rem 0!important}
 # ──────────────────────────────────────────────
 st.markdown("""
 <div class="nfx-hero">
-  <p class="nfx-brand">🐓 Renato Moicano UFC · Apresenta</p>
-  <h1 class="nfx-title">Money <span style="color:var(--mm-red)">Moicano</span> MMA</h1>
-  <p class="nfx-subtitle">Bolão Friendly · Farias vs Capoeira</p>
-  <span class="nfx-badge">Rinha de Inscritos · Lutas Deliciosamente Amadoras</span>
+  <p class="nfx-brand">🥊 Fight Music Show · Apresenta</p>
+  <h1 class="nfx-title">FMS <span style="-webkit-text-fill-color:var(--mm-red); color:var(--mm-red); background:none">8</span></h1>
+  <p class="nfx-subtitle">Popó vs Whindersson · Bolão Friendly</p>
+  <span class="nfx-badge">Revanche Histórica · Pacaembu</span>
 </div>
 <div class="event-info">
-  <div class="venue">Edição Especial · Money Moicano</div>
-  <div class="date">23 · 05 · 18h</div>
+  <div class="venue">Mercado Livre Arena Pacaembu · São Paulo</div>
+  <div class="date">30 · 05 · 2026 · 18h</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -526,10 +533,10 @@ with tab_votar:
         lista_lutas_fmt = []
 
         tag_map = {
-            "F1": ("main", "🐓 RINHA DE INSCRITOS"),
-            "F2": ("co-main", "🐓 RINHA DE INSCRITOS"),
-            "PRINCIPAL": ("", "CARD OFICIAL"),
-            "PRELIM": ("prelim", "CARD OFICIAL"),
+            "F1": ("main", "🏆 MAIN EVENT"),
+            "F2": ("co-main", "CO-MAIN"),
+            "PRINCIPAL": ("", "CARD"),
+            "PRELIM": ("prelim", "CARD"),
         }
 
         for _, luta in lutas.iterrows():
@@ -730,7 +737,7 @@ with tab_admin:
             if venc_atual not in opcoes: venc_atual = "Selecione"
             idx = opcoes.index(venc_atual)
 
-            label = {"F1":"RINHA","F2":"RINHA","PRINCIPAL":"OFICIAL"}.get(tipo,"OFICIAL")
+            label = {"F1":"MAIN","F2":"CO-MAIN","PRINCIPAL":"CARD"}.get(tipo,"CARD")
             st.markdown(f"**[{label}]** {l1} vs {l2}")
             c1, c2 = st.columns([3,1])
             with c1:
